@@ -3,49 +3,40 @@
 
 #include "ActorComponents/OWEInteractionComponent.h"
 
-
-
-#include "DrawDebugHelpers.h"
 #include "Interactables/OWEInteractableBase.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-// Sets default values for this component's properties
 UOWEInteractionComponent::UOWEInteractionComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// Setting default variables for interactable object checking
-	SphereRadius = 200.0f;
-
-	CheckObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
-	CheckObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
-
-	ActorClassFilter = AOWEInteractableBase::StaticClass();
+    this->OnComponentBeginOverlap.AddDynamic(this, &UOWEInteractionComponent::OnSphereBeginOverlap);
+    this->OnComponentEndOverlap.AddDynamic(this, &UOWEInteractionComponent::OnSphereEndOverlap);
 }
 
-void UOWEInteractionComponent::CheckForInteractables()
+void UOWEInteractionComponent::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(), SphereRadius, CheckObjectTypes, ActorClassFilter, ActorsToIgnore, InteractableActors);
-	// Optional: Use to have a visual representation of the SphereOverlapActors
-	// DrawDebugSphere(GetWorld(), GetOwner()->GetActorLocation(), SphereRadius, 12, FColor::Red, true, 0.1f);
+    if(!OtherActor->IsA(AOWEInteractableBase::StaticClass())) return;
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Started overlapping interactable"));
+    
+    if(!InteractableActors.Contains(OtherActor)) InteractableActors.Add(OtherActor);
 }
 
+void UOWEInteractionComponent::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if(!OtherActor->IsA(AOWEInteractableBase::StaticClass())) return;
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Ended overlapping interactable"));
 
-// Called when the game starts
+    if(InteractableActors.Contains(OtherActor)) InteractableActors.Remove(OtherActor);
+}
+
+void UOWEInteractionComponent::Interact()
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Interaction started"));
+}
+
 void UOWEInteractionComponent::BeginPlay()
 {
-	Super::BeginPlay();
-
+    if(GetOwner()->InputComponent && ActionMappingName.IsValid()) GetOwner()->InputComponent->BindAction(ActionMappingName, IE_Pressed, this, &UOWEInteractionComponent::Interact);
+    else GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No input component found or ActionMappingName not set!"));
 }
-
-
-// Called every frame
-void UOWEInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	CheckForInteractables();
-}
-

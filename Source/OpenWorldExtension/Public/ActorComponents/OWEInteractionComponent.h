@@ -3,47 +3,38 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/SphereComponent.h"
+#include "Interfaces/OWEInterfaceInteract.h"
+
 #include "OWEInteractionComponent.generated.h"
 
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class OPENWORLDEXTENSION_API UOWEInteractionComponent : public UActorComponent
+/**
+ * 
+ */
+UCLASS(ClassGroup="OpenWorldExtension", editinlinenew, hidecategories=(Object,LOD,Lighting,TextureStreaming), meta=(DisplayName="Interaction Component", BlueprintSpawnableComponent))
+class OPENWORLDEXTENSION_API UOWEInteractionComponent : public USphereComponent, public IOWEInterfaceInteract
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UOWEInteractionComponent();
-	
-	void CheckForInteractables();
+public:
+    UOWEInteractionComponent();
 
-	// Radius of sphere that checks for interactable objects
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InteractableChecking")
-	float SphereRadius;
+    UFUNCTION()
+    void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	// Object types that the collider will check for when searching for interactable objects
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InteractableChecking")
-	TArray<TEnumAsByte<EObjectTypeQuery>> CheckObjectTypes;
+    UFUNCTION()
+    void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// Specific actor filter
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InteractableChecking")
-	UClass* ActorClassFilter;
+    UFUNCTION()
+    void Interact();
 
-	// What actors to ignore when checking for interactable objects
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InteractableChecking")
-	TArray<AActor*> ActorsToIgnore;
+    
+    UPROPERTY(EditAnywhere, Category = "Interaction")
+    FName ActionMappingName;
 
-	// Interactable actors that are in the collider
-	UPROPERTY(VisibleAnywhere, Category = "InteractableChecking")
-	TArray<AActor*> InteractableActors;
-	
+    UPROPERTY(VisibleAnywhere, Category = "Interaction")
+    TArray<AActor*> InteractableActors;
+
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+    virtual void BeginPlay() override;
 };
