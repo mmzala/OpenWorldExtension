@@ -19,7 +19,7 @@ public:
 	// Sets default values for this actor's properties
 	AOWEInteractableBase();
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	USceneComponent* RootComp;
 
 };
