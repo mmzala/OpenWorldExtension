@@ -27,8 +27,8 @@ public:
     void OnInteract(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnStartFocus();
+	void OnStartFocus(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnEndFocus();
+	void OnEndFocus(AActor* Interactor);
 };
