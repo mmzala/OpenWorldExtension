@@ -3,10 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "OWEInteractionComponent.h"
 #include "Components/SphereComponent.h"
 #include "Interfaces/OWEInterfaceInteract.h"
 
 #include "OWEInteractionComponent.generated.h"
+
+// Delegates for interaction events
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStartFocusSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInteractSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndFocusSignature);
 
 /**
  * 
@@ -51,8 +58,24 @@ public:
     UPROPERTY(VisibleAnywhere, Category = "Interaction")
     AActor* BestInteractActor;
 
+    UPROPERTY()
+    AActor* Owner;
+
+    // Timer for updating BestInteractActor
     FTimerHandle UpdateBestInteractActorTimer;
 
+    // Event called when started focusing on an interactable
+    UPROPERTY(BlueprintAssignable, Category="Interaction")
+    FOnStartFocusSignature OnStartFocus;
+
+    // Event called when interacted
+    UPROPERTY(BlueprintAssignable, Category="Interaction")
+    FOnInteractSignature OnInteract;
+
+    // Event called when ended focusing on an interactable
+    UPROPERTY(BlueprintAssignable, Category="Interaction")
+    FOnEndFocusSignature OnEndFocus;
+    
 protected:
     virtual void BeginPlay() override;
 };
