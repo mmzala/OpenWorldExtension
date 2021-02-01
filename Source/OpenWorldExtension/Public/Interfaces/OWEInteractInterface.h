@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "OWEInterfaceInteract.generated.h"
+#include "OWEInteractInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UOWEInterfaceInteract : public UInterface
+class UOWEInteractInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UOWEInterfaceInteract : public UInterface
 /**
  * 
  */
-class OPENWORLDEXTENSION_API IOWEInterfaceInteract
+class OPENWORLDEXTENSION_API IOWEInteractInterface
 {
 	GENERATED_BODY()
 
@@ -27,8 +27,8 @@ public:
     void OnInteract(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnStartFocus(AActor* Interactor);
+    void OnStartFocus(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnEndFocus(AActor* Interactor);
+    void OnEndFocus(AActor* Interactor);
 };

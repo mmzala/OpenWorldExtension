@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "ActorComponents/OWEInteractionComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -13,13 +11,13 @@ UOWEInteractionComponent::UOWEInteractionComponent()
     SphereRadius = 150.0f;
     ActionMappingName = "Interact";
     InteractActorUpdateTime = 0.1f;
-    MinimalDotProductForFacingInteractable = -0.3f;
+    MinimalDotProductForFacingInteractable = -0.2f;
 }
 
 void UOWEInteractionComponent::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if(!OtherActor->GetClass()->ImplementsInterface(UOWEInterfaceInteract::StaticClass())) return;  // If its not an interactable then return
+    if(!OtherActor->GetClass()->ImplementsInterface(UOWEInteractInterface::StaticClass())) return;  // If its not an interactable then return
     
     InteractableActors.AddUnique(OtherActor);  // Adding interactable to array
 
@@ -30,7 +28,7 @@ void UOWEInteractionComponent::OnSphereBeginOverlap(UPrimitiveComponent* Overlap
 void UOWEInteractionComponent::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if(!OtherActor->GetClass()->ImplementsInterface(UOWEInterfaceInteract::StaticClass())) return;  // If its not an interactable then return
+    if(!OtherActor->GetClass()->ImplementsInterface(UOWEInteractInterface::StaticClass())) return;  // If its not an interactable then return
 
     InteractableActors.Remove(OtherActor); // Remove interactable form array
 
@@ -40,17 +38,15 @@ void UOWEInteractionComponent::OnSphereEndOverlap(UPrimitiveComponent* Overlappe
 
 void UOWEInteractionComponent::Interact()
 {
-    if(!BestInteractActor) return;  // If there is no actor to interact with, then return
+    if(!IsValid(BestInteractActor)) return;  // If there is no actor to interact with, then return
 
     // Calling OnInteract for interactable and player
-    OnInteract.Broadcast();
+    OnInteract.Broadcast(BestInteractActor);
     Execute_OnInteract(BestInteractActor, Owner);
 }
 
 void UOWEInteractionComponent::UpdateBestInteractActor()
 {
-    static AActor* PrevBestInteractActor = nullptr;
-    
     // Resetting values
     BestInteractActor = nullptr;
     float LastBestDotProduct = MinimalDotProductForFacingInteractable;
@@ -58,33 +54,37 @@ void UOWEInteractionComponent::UpdateBestInteractActor()
     // Checking with DotProduct which Interactable is the best and setting that interactable as BestInteractActor
     for (AActor* Interactable : InteractableActors)
     {
-        FVector LocationDiffrence = Interactable->GetActorLocation() - Owner->GetActorLocation();
+        const FVector InteractableVector = Interactable->GetActorLocation() - Owner->GetActorLocation();
         
-        float DotProduct = FVector::DotProduct(LocationDiffrence.GetSafeNormal(), Owner->GetActorForwardVector());
+        const float DotProduct = FVector::DotProduct(InteractableVector.GetSafeNormal(), Owner->GetActorForwardVector());
         
-        if(DotProduct > LastBestDotProduct)
-        {
-            BestInteractActor = Interactable;
-            LastBestDotProduct = DotProduct;
-        }
+        if(DotProduct < LastBestDotProduct) continue;
+        
+        BestInteractActor = Interactable;
+        LastBestDotProduct = DotProduct;
     }
 
     // If BestInteractableActor changed then call OnEndFocus and OnStartFocus for interactables and owner
     if(BestInteractActor != PrevBestInteractActor)
     {
-        if(PrevBestInteractActor)
-        {
-            OnEndFocus.Broadcast();
-            Execute_OnEndFocus(PrevBestInteractActor, Owner);
-        }
-        if(BestInteractActor)
-        {
-            OnStartFocus.Broadcast();
-            Execute_OnStartFocus(BestInteractActor, Owner);
-        }
+        CallFocusEvents();
     }
     
     PrevBestInteractActor = BestInteractActor;
+}
+
+void UOWEInteractionComponent::CallFocusEvents() const
+{
+    if(IsValid(PrevBestInteractActor))
+    {
+        OnEndFocus.Broadcast(PrevBestInteractActor);
+        Execute_OnEndFocus(PrevBestInteractActor, Owner);
+    }
+    if(IsValid(BestInteractActor))
+    {
+        OnStartFocus.Broadcast(BestInteractActor);
+        Execute_OnStartFocus(BestInteractActor, Owner);
+    }
 }
 
 void UOWEInteractionComponent::BeginPlay()
