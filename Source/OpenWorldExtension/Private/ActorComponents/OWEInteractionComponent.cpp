@@ -32,7 +32,7 @@ void UOWEInteractionComponent::OnSphereEndOverlap(UPrimitiveComponent* Overlappe
 
     InteractableActors.Remove(OtherActor); // Remove interactable form array
 
-    // If there is no interactable then stop timer
+    // If there is no interactable then stop checking for best interactable
     if(!InteractableActors.Num()) GetWorld()->GetTimerManager().SetTimer(UpdateBestInteractActorTimer, this, &UOWEInteractionComponent::UpdateBestInteractActor, InteractActorUpdateTime, false, 0);
 }
 
@@ -40,8 +40,7 @@ void UOWEInteractionComponent::Interact()
 {
     if(!IsValid(BestInteractActor)) return;  // If there is no actor to interact with, then return
 
-    // Calling OnInteract for interactable and player
-    OnInteract.Broadcast(BestInteractActor);
+    // Calling OnInteract for interactable
     Execute_OnInteract(BestInteractActor, Owner);
 }
 
@@ -64,27 +63,16 @@ void UOWEInteractionComponent::UpdateBestInteractActor()
         LastBestDotProduct = DotProduct;
     }
 
-    // If BestInteractableActor changed then call OnEndFocus and OnStartFocus for interactables and owner
-    if(BestInteractActor != PrevBestInteractActor)
-    {
-        CallFocusEvents();
-    }
+    // If BestInteractableActor changed then call OnEndFocus and OnStartFocus for interactables
+    if(BestInteractActor != PrevBestInteractActor) CallFocusEvents();
     
     PrevBestInteractActor = BestInteractActor;
 }
 
 void UOWEInteractionComponent::CallFocusEvents() const
 {
-    if(IsValid(PrevBestInteractActor))
-    {
-        OnEndFocus.Broadcast(PrevBestInteractActor);
-        Execute_OnEndFocus(PrevBestInteractActor, Owner);
-    }
-    if(IsValid(BestInteractActor))
-    {
-        OnStartFocus.Broadcast(BestInteractActor);
-        Execute_OnStartFocus(BestInteractActor, Owner);
-    }
+    if(IsValid(PrevBestInteractActor)) Execute_OnEndFocus(PrevBestInteractActor, Owner);
+    if(IsValid(BestInteractActor)) Execute_OnStartFocus(BestInteractActor, Owner);
 }
 
 void UOWEInteractionComponent::BeginPlay()

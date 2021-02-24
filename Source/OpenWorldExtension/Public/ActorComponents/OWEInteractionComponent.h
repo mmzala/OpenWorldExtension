@@ -8,13 +8,8 @@
 
 #include "OWEInteractionComponent.generated.h"
 
-// Delegates for interaction events
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FOnStartFocusSignature, AActor*, Interactable );
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FOnInteractSignature, AActor*, Interactable );
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FOnEndFocusSignature, AActor*, Interactable );
 
-
-UCLASS(ClassGroup="OpenWorldExtension", editinlinenew, hidecategories=(Object,LOD,Lighting,TextureStreaming), meta=(DisplayName="Interaction Component", BlueprintSpawnableComponent))
+UCLASS(ClassGroup="OpenWorldExtension", editinlinenew, hidecategories=(Object,LOD,Lighting,TextureStreaming), meta=(DisplayName="OWE Interaction Component", BlueprintSpawnableComponent))
 class OPENWORLDEXTENSION_API UOWEInteractionComponent : public USphereComponent, public IOWEInteractInterface
 {
 	GENERATED_BODY()
@@ -62,18 +57,6 @@ public:
 
     UPROPERTY()
     AActor* Owner;
-
-    // Event called when started focusing on an interactable
-    UPROPERTY(BlueprintAssignable, Category="Interaction")
-    FOnStartFocusSignature OnStartFocus;
-
-    // Event called when interacted
-    UPROPERTY(BlueprintAssignable, Category="Interaction")
-    FOnInteractSignature OnInteract;
-
-    // Event called when ended focusing on an interactable
-    UPROPERTY(BlueprintAssignable, Category="Interaction")
-    FOnEndFocusSignature OnEndFocus;
 
     // Timer for updating BestInteractActor
     FTimerHandle UpdateBestInteractActorTimer;
